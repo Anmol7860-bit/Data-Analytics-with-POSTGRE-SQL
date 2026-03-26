@@ -40,8 +40,10 @@ CREATE TABLE GOLD_DIM_CUSTOMERS(
   create_date TIMESTAMP
 );
 
+-- Analyze how to measue evolves over time 
+-- ∑[Measure] by [Dimension]
 
-
+select * from gold_fact_sales;
 
 
 
