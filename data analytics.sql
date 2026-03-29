@@ -40,10 +40,37 @@ CREATE TABLE GOLD_DIM_CUSTOMERS(
   create_date TIMESTAMP
 );
 
--- Analyze how to measue evolves over time 
+-- Analyze how to measure evloves over time 
 -- ∑[Measure] by [Dimension]
 
 select * from gold_fact_sales;
+select * from gold_dim_customers;
+select * from gold_dim_products;
+
+-- Analyzing sales performance over time
+
+SELECT 
+EXTRACT(YEAR FROM order_date) AS order_year,
+SUM(sales_amount) AS total_sales,
+COUNT(DISTINCT customer_key) as total_customers,
+SUM(quantity) as total_quantity
+FROM gold_fact_sales 
+WHERE order_date is not null
+group by EXTRACT(YEAR FROM order_date)
+order by EXTRACT(YEAR FROM order_date);
+
+-- changed year over month for detailed insight to discover seasonality in your data 
+SELECT 
+EXTRACT(MONTH FROM order_date) AS order_year,
+SUM(sales_amount) AS total_sales,
+COUNT(DISTINCT customer_key) as total_customers,
+SUM(quantity) as total_quantity
+FROM gold_fact_sales 
+WHERE order_date is not null
+group by EXTRACT(MONTH FROM order_date)
+order by EXTRACT(MONTH FROM order_date);
+
+
 
 
 
