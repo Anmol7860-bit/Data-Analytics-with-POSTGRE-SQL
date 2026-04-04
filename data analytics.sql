@@ -70,9 +70,50 @@ WHERE order_date is not null
 group by EXTRACT(MONTH FROM order_date)
 order by EXTRACT(MONTH FROM order_date);
 
+-- Cumulative Analysis
+-- ∑[Cumulative Measure] by [Date Dimension]
 
+-- Calculating the total sales per month and running total of sales over time
+SELECT 
+order_date,
+total_sales,
+SUM(total_sales) OVER(ORDER BY order_date) as running_total_sales
+FROM
+(
+SELECT
+DATE_TRUNC('MONTH',order_date) as order_date,
+SUM(sales_amount) as total_sales
+FROM gold_fact_sales
+WHERE order_date IS NOT NULL
+GROUP BY DATE_TRUNC('MONTH',order_date)
+ORDER BY DATE_TRUNC('MONTH',order_date)
+) as monthly_sales;
 
+-- Performance Analysis
+-- Comparing the current value to a target value helps measure success and compare performance 
+-- current[Measure]-Target[Measure]
 
+-- Analyze the yearly performance of products by comparing each products sales to both its average sales performance and the previous years sales?
+
+WITH yearly_product_sales AS (
+    SELECT
+        EXTRACT(YEAR FROM gold_fact_sales.order_date) AS order_year,
+        gold_dim_products.product_name,
+        SUM(gold_fact_sales.sales_amount) AS current_sales 
+    FROM gold_fact_sales
+    LEFT JOIN gold_dim_products 
+        ON gold_fact_sales.product_key = gold_dim_products.product_key
+    WHERE gold_fact_sales.order_date IS NOT NULL
+    GROUP BY 
+        EXTRACT(YEAR FROM gold_fact_sales.order_date),
+        gold_dim_products.product_name
+)
+SELECT 
+    order_year,
+    product_name,
+    current_sales,
+    AVG(current_sales) OVER (PARTITION BY product_name) AS avg_sales
+FROM yearly_product_sales;
 
 
 
