@@ -112,24 +112,76 @@ SELECT
     order_year,
     product_name,
     current_sales,
-    AVG(current_sales) OVER (PARTITION BY product_name) AS avg_sales
-FROM yearly_product_sales;
+    AVG(current_sales) OVER (PARTITION BY product_name) AS avg_sales,
+	current_sales-AVG(current_sales) OVER(PARTITION BY product_name) as diff_avg,
+	CASE WHEN current_sales - AVG(current_sales) OVER(PARTITION BY product_name)>0 THEN 'Above Avg'
+	     WHEN current_sales - AVG(current_sales) OVER(PARTITION BY product_name)<0 THEN 'Below Avg'
+		 ElSE 'AVG'
+	END avg_change,
+LAG(current_sales) OVER(PARTITION BY product_name ORDER BY order_year) py_sales,
+current_sales-LAG(current_sales) OVER(PARTITION BY product_name ORDER BY order_year) as diff_py,
+    CASE WHEN current_sales - LAG(current_sales) OVER(PARTITION BY product_name ORDER BY order_year)>0 THEN 'Increase'
+	     WHEN current_sales - LAG(current_sales) OVER(PARTITION BY product_name ORDER BY order_year)<0 THEN 'Decrease'
+		 ELSE 'No change'
+END py_change
+FROM yearly_product_sales
+ORDER BY product_name,order_year; 
 
+-- PART TO WHOLE ANALYSIS
+-- Analyzing how an individual part is performing compared to the overall, allowing us to understand which category has the greatest impact on the business
 
+-- Which categories contribute the most to the overall sales?
+WITH category_sales AS (
+    SELECT 
+        category,
+        SUM(sales_amount) AS total_sales
+    FROM gold_fact_sales
+    LEFT JOIN gold_dim_products
+        ON gold_dim_products.product_key = gold_fact_sales.product_key
+    GROUP BY category
+)
 
+SELECT 
+    category,
+    total_sales,
+    SUM(total_sales) OVER() AS overall_sales,
+    CONCAT(ROUND(
+        (total_sales::NUMERIC / SUM(total_sales) OVER()) * 100,
+        2
+    ),'%') AS percentage_of_total
+FROM category_sales
+ORDER BY total_sales DESC;
 
+-- Data Segmentation
+-- Grouping the data based on specfic range helps understand the correlation between two measures
 
+-- Segment products into cost ranges and count how many products fall into each segment
+WITH product_segments AS(
+SELECT 
+product_key,
+product_name,
+cost,
+CASE WHEN cost < 100 THEN 'Below 100'
+     WHEN cost BETWEEN 100 AND 500 THEN '100-500'
+	 WHEN cost BETWEEN 500 AND 1000 THEN '500-1000'
+	 ELSE 'Above 1000'
+END cost_range
+FROM gold_dim_products)
 
+SELECT 
+cost_range,
+COUNT(product_key) AS total_products
+FROM product_segments
+GROUP BY cost_range
+ORDER BY total_products DESC;
 
-
-
-
-
-
-
-
-
-
+-- Group customers into three segments based on their spending begaviour 
+SELECT c.customer_key,
+       f.sales_amount,
+	   f.order_date
+	   FROM gold_fact_sales f
+LEFT JOIN gold_dim_customers c
+ON f.customer_key=c.customer_key;
 
 
 
