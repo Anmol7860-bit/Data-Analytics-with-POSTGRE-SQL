@@ -175,13 +175,84 @@ FROM product_segments
 GROUP BY cost_range
 ORDER BY total_products DESC;
 
--- Group customers into three segments based on their spending begaviour 
-SELECT c.customer_key,
-       f.sales_amount,
-	   f.order_date
-	   FROM gold_fact_sales f
-LEFT JOIN gold_dim_customers c
-ON f.customer_key=c.customer_key;
+-- Group customers into three segments based on their spending behaviour
+WITH customer_spending AS (
+    SELECT 
+        c.customer_key,
+        SUM(f.sales_amount) AS total_spending,
+        MIN(order_date) AS first_order,
+        MAX(order_date) AS last_order,
+        DATE_PART('year', AGE(MAX(order_date), MIN(order_date)))*12+ 
+		DATE_PART('month', AGE(MAX(order_date), MIN(order_date))) AS lifespan
+    FROM gold_fact_sales f
+    LEFT JOIN gold_dim_customers c
+        ON f.customer_key = c.customer_key
+    GROUP BY c.customer_key
+)
+
+SELECT
+    customer_segment,
+    COUNT(customer_key) AS total_customers
+FROM (
+    SELECT
+        customer_key,
+        CASE 
+            WHEN lifespan >= 12 AND total_spending > 5000 THEN 'VIP'
+            WHEN lifespan >= 12 AND total_spending <= 5000 THEN 'Regular'
+            ELSE 'New'
+        END AS customer_segment
+    FROM customer_spending
+) t
+GROUP BY customer_segment
+ORDER BY total_customers DESC;
+
+/*
+============================================================
+
+Customer Report
+
+============================================================
+
+Purpose:
+•⁠  ⁠This report consolidates key customer metrics and behaviors
+
+Highlights:
+1.⁠ ⁠Gathers essential fields such as names, ages, and transaction details.
+2.⁠ ⁠Segments customers into categories (VIP, Regular, New) and age groups.
+3.⁠ ⁠Aggregates customer-level metrics:
+   - total orders
+   - total sales
+   - total quantity purchased
+   - total products
+   - lifespan (in months)
+
+4.⁠ ⁠Calculates valuable KPIs:
+   - recency (months since last order)
+   - average order value
+   - average monthly spend
+
+============================================================
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
