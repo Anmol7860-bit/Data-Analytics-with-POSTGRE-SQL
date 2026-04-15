@@ -217,7 +217,7 @@ Purpose:
 •⁠  ⁠This report consolidates key customer metrics and behaviors
 
 Highlights:
-1.⁠ ⁠Gathers essential fields such as names, ages, and transaction details.
+1.⁠ ⁠Gathers essential fields such as customer names, ages, and transaction details.
 2.⁠ ⁠Segments customers into categories (VIP, Regular, New) and age groups.
 3.⁠ ⁠Aggregates customer-level metrics:
    - total orders
@@ -307,7 +307,33 @@ CASE WHEN lifespan=0 THEN total_sales
 END AS avg_monthly_spend
 FROM customer_aggregation;
 
- 
+/*
+============================================================
+
+Product Report
+
+============================================================
+
+Purpose:
+•⁠  ⁠This report consolidates key Product metrics and behaviors
+
+Highlights:
+1.⁠ ⁠Gathers essential fields such as Product name,category,subcategory and cost.
+2.⁠ ⁠Segments products by revenue to identify High-performance,Mid-Range or Low-Performance.
+3.⁠ ⁠Aggregates customer-level metrics:
+   - total orders
+   - total sales
+   - total quantity sold
+   - total customers(unique)
+   - lifespan (in months)
+
+4.⁠ ⁠Calculates valuable KPIs:
+   - recency (months since last sale)
+   - average order revenue
+   - average monthly revenue
+
+============================================================
+*/
 
 	
 
